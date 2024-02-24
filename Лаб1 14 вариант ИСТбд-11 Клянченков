@@ -46,4 +46,4 @@ with open('test.txt', 'r') as f:
                     if min == k:
                         min = book[str(k)]
                 print("Максимальная цифра числа -", i, "- это", max, ";", "Минимальная цифра числа - ", i, "- это", min)
-        s = f.read()
+        s = f.read(1024)
