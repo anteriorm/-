@@ -1,9 +1,4 @@
 #ИСТбд-11 14 вариант Клянченков Михаил Задание: Натуральные восьмеричные числа. Для каждого числа минимальную и максимальную цифру вывести прописью
-with open('test.txt', 'r') as f:
-    s = f.read()
-    if not s:
-        print('Файл пустой')
-
 book = {
     "0" : "ноль",
     "1" : "один",
@@ -14,37 +9,39 @@ book = {
     "6" : "шесть",
     "7" : "семь",
 }
-n = s.split()
-print(n)
-for i in n:
-    min = 100000000
-    max = 0
-    flag = False
+with open('test.txt', 'r') as f:
+    s = f.read(1024)
+    if not s:
+        print('Файл пустой')
+    n = s.split()
+    print(n)
+    for i in n:
+        min = 100000000
+        max = 0
+        flag = False
+        try:
+            u = str(abs(int(i)))
+        except ValueError:
+            print("Неподходит условию")
+            continue
+        for j in range(len(u)):
+            if u[j] in '1234567':
+                q = int(u[j])
+                if q > max:
+                    max = int(q)
+                if q < min:
+                    min = int(q)
+                flag = True
+            else:
+                flag = False
+                break
 
-    try:
-        u = str(abs(int(i)))
-    except ValueError:
-        print("Неподходит условию")
-        continue
-
-    for j in range(len(u)):
-        if u[j] in '1234567':
-            q = int(u[j])
-            if q > max:
-                max = int(q)
-            if q < min:
-                min = int(q)
-            flag = True
+        if not(flag):
+            print("СС8 - у вас есть цифры неподходящие условию")
         else:
-            flag = False
-            break
-
-    if not(flag):
-        print("СС8 - у вас есть цифры неподходящие условию")
-    else:
-        for k in range(8):
-            if max == k:
-                max = book[str(k)]
-            if min == k:
-                min = book[str(k)]
-        print("Максимальная цифра числа -", i, "- это", max, ";", "Минимальная цифра числа - ", i, "- это", min)
+            for k in range(8):
+                if max == k:
+                    max = book[str(k)]
+                if min == k:
+                    min = book[str(k)]
+            print("Максимальная цифра числа -", i, "- это", max, ";", "Минимальная цифра числа - ", i, "- это", min)
