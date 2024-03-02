@@ -15,23 +15,19 @@ book = {
 file_path = "test.txt"
 
 with open(file_path, 'r') as file:
-    block_size = 1024
-    block = file.read(block_size)
+    block = file.read()
 
-    while block:
-        if not block:
-            print('Файл пустой')
+    if not block:
+        print('Файл пустой')
 
-        numbers = re.findall(r'\b[0-7]+\b', block)
+    numbers = re.findall(r'\b[0-7]+\b', block)
 
-        for num in numbers:
-            num_str = str(abs(int(num)))
-            max_digit = max(num_str)
-            min_digit = min(num_str)
+    for num in numbers:
+        num_str = str(abs(int(num)))
+        max_digit = max(num_str)
+        min_digit = min(num_str)
 
-            max_word = book[max_digit]
-            min_word = book[min_digit]
+        max_word = book[max_digit]
+        min_word = book[min_digit]
 
-            print(f"Максимальная цифра числа {num} - это {max_word}; Минимальная цифра числа {num} - это {min_word}")
-
-        block = file.read(block_size)
+        print(f"Максимальная цифра числа {num} - это {max_word}; Минимальная цифра числа {num} - это {min_word}")
