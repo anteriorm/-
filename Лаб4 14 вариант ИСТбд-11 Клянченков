@@ -1,0 +1,72 @@
+#С клавиатуры вводится два числа K и N. Квадратная матрица А(N,N), состоящая из 4-х равных по размерам подматриц, B,C,D,E заполняется случайным образом целыми числами в интервале [-10,10]. Для отладки использовать не случайное заполнение, а целенаправленное. Вид матрицы А:
+#Для простоты все индексы в подматрицах относительные. 
+#По сформированной матрице F (или ее частям) необходимо вывести не менее 3 разных графиков.
+#Программа должна использовать функции библиотек numpy  и mathplotlib
+#14.Формируется матрица F следующим образом: скопировать в нее А и если в В количество чисел, меньших К в нечетных столбцах больше, чем сумма чисел в четных строках, то поменять местами С и Е симметрично, иначе В и Е поменять местами несимметрично. При этом матрица А не меняется. После чего если определитель матрицы А больше суммы диагональных элементов матрицы F, то вычисляется выражение: A-1*AT – K * F, иначе вычисляется выражение (A-1 +G-FТ)*K, где G-нижняя треугольная матрица, полученная из А. Выводятся по мере формирования А, F и все матричные операции последовательно.
+
+import random
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+#Формирование мартриц
+def generate_matrix(n):
+    b = np.random.randint(-10, 11, (n//2, n//2))
+    c = np.random.randint(-10, 11, (n//2, n//2))
+    d = np.random.randint(-10, 11, (n//2, n//2))
+    e = np.random.randint(-10, 11, (n//2, n//2))
+    a = np.block([[b, c], [d, e]])
+    return a
+
+#Визуализирует матрицу
+def plot_matrix(matrix):
+    plt.imshow(matrix, cmap='coolwarm', interpolation='nearest')
+    plt.colorbar()
+    plt.show()
+
+def main():
+    k = int(input("Введите K: "))
+    n = int(input("Введите N: "))
+
+    a = generate_matrix(n)
+    print("Матрица A:")
+    print(a)
+    plot_matrix(a)
+    #Проверка условий с помощью numpy
+    b_count = np.count_nonzero(a[::2, ::2] < k)
+    even_sum = np.sum(a[1::2, :], axis=0)
+    if b_count > np.sum(even_sum < k):
+        c = a[:n//2, n//2:]
+        e = a[n//2:, :n//2]
+        a[:n//2, n//2:], a[n//2:, :n//2] = e, c
+        print("Матрица F (поменяли местами С и Е симметрично):")
+    else:
+        b = a[:n//2, :n//2]
+        e = a[n//2:, :n//2]
+        a[:n//2, :n//2], a[n//2:, :n//2] = e, b
+        print("Матрица F (поменяли местами В и Е несимметрично):")
+    print(a)
+    plot_matrix(a)
+
+    #Вычисление определителя и суммы элементов главной диагонали, а так же их проверка
+    det_a = np.linalg.det(a)
+    diag_sum = np.sum(np.diag(a))
+    if det_a > diag_sum:
+        g = np.tril(a)
+        a_inv = np.linalg.inv(a)
+        at = a.T
+        res = np.dot(a_inv, at) - k * a
+        print("Вычислили выражение A-1*AT – K * F:")
+        print(res)
+        plot_matrix(res)
+    else:
+        g = np.tril(a)
+        a_inv = np.linalg.inv(a)
+        ft = a.T - g
+        res = np.dot(a_inv, ft) + (np.eye(n) - g.T) * k
+        print("Вычислили выражение (A-1 +G-FТ)*K:")
+        print(res)
+        plot_matrix(res)
+
+if __name__ == '__main__':
+    main()
