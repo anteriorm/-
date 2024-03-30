@@ -21,7 +21,7 @@ def dynamic_F(n, cache={0: 1, 1: 1}):
         """
         Здесь используем dynamic_factorial для вычисления факториалов
         """
-        sign = ((-1) ** n) & 1
+        sign = (-(n & 1) | 1)  # определяем знак числа с помощью сдвига битов
         result = sign * (dynamic_F(n-1, cache) / dynamic_factorial(n) + dynamic_F(n-2, cache) / dynamic_factorial(2*n))
         cache[n] = result
         return result
@@ -38,10 +38,13 @@ def recursive_factorial(n):
 """
 Динамическая функция для вычисления факториала
 """
-def dynamic_factorial(n):
-    if n not in cache_factorial:
-        cache_factorial[n] = n * dynamic_factorial(n-1)
-    return cache_factorial[n]
+def dynamic_factorial(n, cache={0: 1, 1: 1}):
+    if n in cache:
+        return cache[n]
+    else:
+        result = n * dynamic_factorial(n-1, cache)
+        cache[n] = result
+        return result
 
 """
 Итеративная функция для вычисления факториала
