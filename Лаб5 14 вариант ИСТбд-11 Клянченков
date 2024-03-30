@@ -21,7 +21,8 @@ def dynamic_F(n, cache={0: 1, 1: 1}):
         """
         Здесь используем dynamic_factorial для вычисления факториалов
         """
-        result = (-1)**n * (dynamic_F(n-1, cache) / dynamic_factorial(n) + dynamic_F(n-2, cache) / dynamic_factorial(2*n))
+        sign = ((-1) ** n) & 1
+        result = sign * (dynamic_F(n-1, cache) / dynamic_factorial(n) + dynamic_F(n-2, cache) / dynamic_factorial(2*n))
         cache[n] = result
         return result
 
