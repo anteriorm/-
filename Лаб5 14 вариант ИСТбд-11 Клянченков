@@ -44,10 +44,14 @@ def recursive_factorial(n):
 Динамическая функция для вычисления факториала
 """
 def dynamic_factorial(n):
-    if n not in cache_factorial:
-        cache_factorial[n] = n * dynamic_factorial(n-1)
-    return cache_factorial[n]
+    if n in cache_factorial:
+        return cache_factorial[n]
 
+    # Вычисляем факториалы последовательно до n и сохраняем их в кэше
+    for i in range(2, n + 1):
+        cache_factorial[i] = cache_factorial[i - 1] * i
+
+    return cache_factorial[n]
 """
 Итеративная функция для вычисления факториала
 """
