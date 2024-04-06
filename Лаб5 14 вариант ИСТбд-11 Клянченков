@@ -89,12 +89,6 @@ for i, n in enumerate(n_values):
 """
 Построение и вывод графика результатов
 """
-"""
-Построение и вывод графика результатов
-"""
-"""
-Построение и вывод графика результатов
-"""
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.plot(n_values, recursive_times, label='Рекурсивно', marker='o', linewidth=2)
 ax.plot(n_values, iterative_times, label='Итерационно', marker='o', linewidth=2)
