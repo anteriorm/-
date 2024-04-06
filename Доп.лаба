@@ -1,0 +1,38 @@
+"""
+Истбд-11 Клянченков Михаил
+Дополнительная лабораторная работа, вывод 'Змейкой'
+"""
+import sys
+import random
+def printmatrix_diagonal_snake(matrix):
+    if not matrix or not matrix[0]:
+        return
+
+    rows, cols = len(matrix), len(matrix[0])
+    for slice in range(rows + cols - 1):
+        z = 0 if slice < cols else slice - cols + 1
+        for j in range(z, slice - z + 1):
+            i = slice - j
+            if i < rows and j < cols:
+                if slice % 2 == 0:
+                    print(f"{matrix[i][j]}", end=' ')
+                else:
+                    print(f"{matrix[j][i]}", end=' ')
+        print()
+
+"""
+matrix = [
+    [0.0, 0.1, 0.2, 0.3],
+    [1.0, 1.1, 1.2, 1.3],
+    [2.0, 2.1, 2.2, 2.3],
+    [3.0, 3.1, 3.2, 3.3]
+]
+print_matrix_diagonal_snake(matrix)
+"""
+try:
+    N = int(input("Введите число n: "))
+except ValueError:
+    print("Введите число")
+    sys.exit()
+A = [[random.randint(-100, 100) for  in range(int(N))] for _ in range(int(N))]
+print_matrix_diagonal_snake(A)
