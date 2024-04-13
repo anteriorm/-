@@ -10,21 +10,19 @@ import matplotlib.pyplot as plt
 Кэш для хранения вычисленных значений факториалов
 """
 cache_factorial = {0: 1, 1: 1}
-
 """
 Динамическая функция для вычисления F(n)
 """
 def dynamic_F(n, cache={0: 1, 1: 1}):
+    k = -1
     if n in cache:
         return cache[n]
     else:
         """
         Здесь используем dynamic_factorial для вычисления факториалов
         """
-        if n%2 == 0:
-            result = (1) * (dynamic_F(n-1, cache) / dynamic_factorial(n) + dynamic_F(n-2, cache) / dynamic_factorial(2*n))
-        else:
-            result = (-1) * (dynamic_F(n - 1, cache) / dynamic_factorial(n) + dynamic_F(n - 2, cache) / dynamic_factorial(2 * n))
+        k *= -1
+        result = (k) * (dynamic_F(n-1, cache) / dynamic_factorial(n) + dynamic_F(n-2, cache) / dynamic_factorial(2*n))
         """
         F(0) = 1, F(1) = 1, F(n) = (-1)**n * (F(n–1) / n! + F(n - 2) / (2n)!), при n > 1
         """
