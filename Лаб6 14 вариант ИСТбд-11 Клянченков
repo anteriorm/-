@@ -46,14 +46,14 @@ def complex_schedule_generation(women, men, shifts, power_positions, positions):
     """
     for first_shift in one_shift_schedules:
         for second_shift in one_shift_schedules:
-        """
-        Ограничение: мужчины не могут работать более одной смены подряд
-        """
+            """
+            Ограничение: мужчины не могут работать более одной смены подряд
+            """
             if not set(first_shift[0]).intersection(second_shift[0]):
                 optimal_schedules.append((first_shift, second_shift))
-      """
-      Здесь мы можем ввести дополнительные ограничения и целевую функцию
-      """
+            """
+            Здесь мы можем ввести дополнительные ограничения и целевую функцию
+            """
     return optimal_schedules
 """
 Определяем функцию для оценки расписания (целевая функция)
@@ -63,8 +63,8 @@ def evaluate_schedule(schedule):
       Пример целевой функции: минимизация количества смен, где одни и те же люди работают на силовых позициях
       Это может быть любая другая функция в зависимости от требований
       """
-    men_shifts = [shift[0] for shift in schedule]
-    return len(set(men_shifts))
+      men_shifts = [shift[0] for shift in schedule]
+      return len(set(men_shifts))
 """
 Замер времени выполнения алгоритмического подхода
 """
