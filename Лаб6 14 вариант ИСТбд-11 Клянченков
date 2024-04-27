@@ -51,9 +51,6 @@ def complex_schedule_generation(women, men, shifts, power_positions, positions):
             """
             if not set(first_shift[0]).intersection(second_shift[0]):
                 optimal_schedules.append((first_shift, second_shift))
-            """
-            Здесь мы можем ввести дополнительные ограничения и целевую функцию
-            """
     return optimal_schedules
 """
 Определяем функцию для оценки расписания (целевая функция)
