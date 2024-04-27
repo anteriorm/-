@@ -7,9 +7,9 @@ men = 8
 shifts = 2
 power_positions = 4
 positions = 10
-salary_cap = 10000  # Предположим, что это вилка зарплаты для одной смены
+salary_cap = 10000
 
-# Зарплаты работников (примерные значения)
+# Зарплаты работников
 salaries = {
     'men': [1000, 1200, 1100, 1300, 1250, 1150, 1220, 1230],
     'women': [800, 850, 900, 950, 1000, 1050, 980, 1020, 990, 1010, 1030, 1040]
@@ -18,7 +18,7 @@ salaries = {
 # Целевая функция оценки расписания
 def schedule_cost(schedule):
     men_cost, women_cost = schedule
-    #миними
+    #мин
     return sum(salaries['men'][m] for m in men_cost) + sum(salaries['women'][w] for w in women_cost)
 
 # Функция для создания комбинаций без использования itertools.combinations
