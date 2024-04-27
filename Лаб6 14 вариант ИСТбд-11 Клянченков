@@ -1,13 +1,5 @@
-"""
-Задание состоит из двух частей. 
-1 часть – написать программу в соответствии со своим вариантом задания. Написать 2 варианта формирования (алгоритмический и с помощью функций Питона), сравнив по времени их выполнение.
-2 часть – усложнить написанную программу, введя по своему усмотрению в условие минимум одно ограничение на характеристики объектов (которое будет сокращать количество переборов)  и целевую функцию для нахождения оптимального  решения.
-Вариант 14
-Конвейер сборки состоит из 10 технологических мест. На 4 из них требуется силовая подготовка (мужчины). Конвейер должен работать в 2 смены. Сформировать все возможные варианты рабочего расписания, если в цехе работает 20 рабочих: 12 женщин и 8 мужчин.
-"""
-import itertools
 import time
-
+import itertools
 # Исходные данные
 total_workers = 20
 women = 12
@@ -15,67 +7,66 @@ men = 8
 shifts = 2
 power_positions = 4
 positions = 10
+salary_cap = 10000  # Предположим, что это вилка зарплаты для одной смены
 
-# Алгоритмический подход
-def algorithmic_schedule_generation(women, men, power_positions, positions):
+# Зарплаты работников (примерные значения)
+salaries = {
+    'men': [1000, 1200, 1100, 1300, 1250, 1150, 1220, 1230],
+    'women': [800, 850, 900, 950, 1000, 1050, 980, 1020, 990, 1010, 1030, 1040]
+}
+
+# Целевая функция оценки расписания
+def schedule_cost(schedule):
+    men_cost, women_cost = schedule
+    #миними
+    return sum(salaries['men'][m] for m in men_cost) + sum(salaries['women'][w] for w in women_cost)
+
+# Функция для создания комбинаций без использования itertools.combinations
+def custom_combinations(arr, k, start=0, curr=[]):
+    if len(curr) == k:
+        yield tuple(curr)
+    else:
+        for i in range(start, len(arr)):
+            yield from custom_combinations(arr, k, i + 1, curr + [arr[i]])
+
+# Алгоритмический подход с учетом вилки зарплаты и минимизации затрат
+def algorithmic_schedule_generation(women, men, power_positions, positions, salary_cap):
     schedules = []
-    for men_comb in itertools.combinations(range(men), power_positions):
-        for women_comb in itertools.combinations(range(women), positions - power_positions):
-            schedules.append((men_comb, women_comb))
-    return schedules
+    for men_comb in custom_combinations(range(men), power_positions):
+        for women_comb in custom_combinations(range(women), positions - power_positions):
+            schedule = (men_comb, women_comb)
+            cost = schedule_cost(schedule)
+            if cost <= salary_cap:
+                schedules.append(schedule)
+    # Сортируем расписания по стоимости
+    return sorted(schedules, key=schedule_cost)
 
-# Подход с использованием функций Python
-def pythonic_schedule_generation(women, men, power_positions, positions):
+# Питоновский подход с учетом вилки зарплаты
+def pythonic_schedule_generation(women, men, power_positions, positions, salary_cap):
     men_combinations = list(itertools.combinations(range(men), power_positions))
     women_combinations = list(itertools.combinations(range(women), positions - power_positions))
-    return list(itertools.product(men_combinations, women_combinations))
+    all_combinations = list(itertools.product(men_combinations, women_combinations))
+    valid_schedules = [comb for comb in all_combinations if schedule_cost(comb) <= salary_cap]
+    # Сортируем расписания по стоимости
+    return sorted(valid_schedules, key=schedule_cost)
 
 # Замер времени выполнения алгоритмического подхода
 start_time = time.time()
-schedules_alg = algorithmic_schedule_generation(women, men, power_positions, positions)
+schedules_alg = algorithmic_schedule_generation(women, men, power_positions, positions, salary_cap)
 end_time = time.time()
 print(f"Алгоритмический подход: {end_time - start_time} секунд")
 
 # Замер времени выполнения подхода с использованием функций Python
 start_time = time.time()
-schedules_py = pythonic_schedule_generation(women, men, power_positions, positions)
+schedules_py = pythonic_schedule_generation(women, men, power_positions, positions, salary_cap)
 end_time = time.time()
 print(f"Подход с использованием функций Python: {end_time - start_time} секунд")
 
-# Вывод первых 5 расписаний для проверки
-print("Первые 5 расписаний (алгоритмический подход):")
+# Вывод первых 5 оптимальных расписаний для проверки
+print("Первые 5 оптимальных расписаний (алгоритмический подход):")
 for schedule in schedules_alg[:5]:
-    print(schedule)
+    print(schedule, schedule_cost(schedule))
 
-print("\nПервые 5 расписаний (подход с использованием функций Python):")
+print("\nПервые 5 оптимальных расписаний (подход с использованием функций Python):")
 for schedule in schedules_py[:5]:
-    print(schedule)
-
-
-# Усложненный алгоритмический подход
-def complex_schedule_generation(women, men, shifts, power_positions, positions):
-    one_shift_schedules = algorithmic_schedule_generation(women, men, power_positions, positions)
-    two_shift_schedules = []
-    for first_shift in one_shift_schedules:
-        for second_shift in one_shift_schedules:
-            if not set(first_shift[0]).intersection(second_shift[0]):  # Ограничение: мужчины не работают две смены подряд
-                two_shift_schedules.append((first_shift, second_shift))
-    return two_shift_schedules
-
-# Целевая функция оценки расписания
-def evaluate_schedule(schedule):
-    # Минимизация количества смен с одними и теми же мужчинами на силовых позициях
-    men_shifts = [shift[0] for shift in schedule]
-    return len(set(men_shifts))
-
-# Генерация и оценка оптимальных расписаний
-start_time = time.time()
-optimal_schedules = complex_schedule_generation(women, men, shifts, power_positions, positions)
-optimal_schedules.sort(key=evaluate_schedule)  # Сортировка расписаний по целевой функции
-end_time = time.time()
-print(f"\nУсложненный алгоритм: {end_time - start_time} секунд")
-
-# Вывод первых 5 оптимальных расписаний
-print("Первые 5 оптимальных расписаний:")
-for schedule in optimal_schedules[:5]:
-    print(schedule)
+    print(schedule, schedule_cost(schedule))
