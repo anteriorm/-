@@ -7,105 +7,75 @@
 """
 import itertools
 import time
-"""
-Исходные данные
-"""
+
+# Исходные данные
 total_workers = 20
 women = 12
 men = 8
 shifts = 2
 power_positions = 4
 positions = 10
-"""
-Алгоритмический подход для генерации расписаний
-"""
-def algorithmic_schedule_generation(women, men, shifts, power_positions, positions):
+
+# Алгоритмический подход
+def algorithmic_schedule_generation(women, men, power_positions, positions):
     schedules = []
     for men_comb in itertools.combinations(range(men), power_positions):
         for women_comb in itertools.combinations(range(women), positions - power_positions):
             schedules.append((men_comb, women_comb))
     return schedules
-"""
-Подход с использованием встроенных функций Python для генерации расписаний
-"""
-def pythonic_schedule_generation(women, men, shifts, power_positions, positions):
+
+# Подход с использованием функций Python
+def pythonic_schedule_generation(women, men, power_positions, positions):
     men_combinations = list(itertools.combinations(range(men), power_positions))
     women_combinations = list(itertools.combinations(range(women), positions - power_positions))
     return list(itertools.product(men_combinations, women_combinations))
-"""
-Усложненный алгоритмический подход
-"""
-def complex_schedule_generation(women, men, shifts, power_positions, positions):
-    optimal_schedules = []
-    """
-    Генерируем все возможные комбинации для одной смены
-    """
-    one_shift_schedules = algorithmic_schedule_generation(women, men, 1, power_positions, positions)
-    """
-    Перебираем комбинации для двух смен
-    """
-    for first_shift in one_shift_schedules:
-        for second_shift in one_shift_schedules:
-            """
-            Ограничение: мужчины не могут работать более одной смены подряд
-            """
-            if not set(first_shift[0]).intersection(second_shift[0]):
-                optimal_schedules.append((first_shift, second_shift))
-    return optimal_schedules
-"""
-Определяем функцию для оценки расписания (целевая функция)
-"""
-def evaluate_schedule(schedule):
-      """
-      Пример целевой функции: минимизация количества смен, где одни и те же люди работают на силовых позициях
-      Это может быть любая другая функция в зависимости от требований
-      """
-      men_shifts = [shift[0] for shift in schedule]
-      return len(set(men_shifts))
-"""
-Замер времени выполнения алгоритмического подхода
-"""
+
+# Замер времени выполнения алгоритмического подхода
 start_time = time.time()
-schedules_alg = algorithmic_schedule_generation(women, men, shifts, power_positions, positions)
+schedules_alg = algorithmic_schedule_generation(women, men, power_positions, positions)
 end_time = time.time()
 print(f"Алгоритмический подход: {end_time - start_time} секунд")
-"""
-Выводим первые 5 расписаний для проверки
-"""
-for schedule in schedules_alg[:5]:
-    print(schedule)
-"""
-Замер времени выполнения подхода с использованием функций Python
-"""
+
+# Замер времени выполнения подхода с использованием функций Python
 start_time = time.time()
-schedules_py = pythonic_schedule_generation(women, men, shifts, power_positions, positions)
+schedules_py = pythonic_schedule_generation(women, men, power_positions, positions)
 end_time = time.time()
 print(f"Подход с использованием функций Python: {end_time - start_time} секунд")
-"""
-Выводим первые 5 расписаний для проверки
-"""
+
+# Вывод первых 5 расписаний для проверки
+print("Первые 5 расписаний (алгоритмический подход):")
+for schedule in schedules_alg[:5]:
+    print(schedule)
+
+print("\nПервые 5 расписаний (подход с использованием функций Python):")
 for schedule in schedules_py[:5]:
     print(schedule)
-"""
-Теперь найдем оптимальное расписание
-"""
-optimal_schedules = complex_schedule_generation(women, men, shifts, power_positions, positions)
-optimal_schedules.sort(key=evaluate_schedule)  # Сортируем расписания по целевой функции
-"""
-Выводим первые 5 оптимальных расписаний
-"""
-for schedule in optimal_schedules[:5]:
-    print(schedule)
-"""
-Замеряем время выполнения усложненного алгоритма
-"""
+
+
+# Усложненный алгоритмический подход
+def complex_schedule_generation(women, men, shifts, power_positions, positions):
+    one_shift_schedules = algorithmic_schedule_generation(women, men, power_positions, positions)
+    two_shift_schedules = []
+    for first_shift in one_shift_schedules:
+        for second_shift in one_shift_schedules:
+            if not set(first_shift[0]).intersection(second_shift[0]):  # Ограничение: мужчины не работают две смены подряд
+                two_shift_schedules.append((first_shift, second_shift))
+    return two_shift_schedules
+
+# Целевая функция оценки расписания
+def evaluate_schedule(schedule):
+    # Минимизация количества смен с одними и теми же мужчинами на силовых позициях
+    men_shifts = [shift[0] for shift in schedule]
+    return len(set(men_shifts))
+
+# Генерация и оценка оптимальных расписаний
 start_time = time.time()
 optimal_schedules = complex_schedule_generation(women, men, shifts, power_positions, positions)
-optimal_schedules.sort(key=evaluate_schedule)
+optimal_schedules.sort(key=evaluate_schedule)  # Сортировка расписаний по целевой функции
 end_time = time.time()
-print(f"Усложненный алгоритм: {end_time - start_time} секунд")
-"""
-Выводим первые 5 оптимальных расписаний после сортировки
-"""
+print(f"\nУсложненный алгоритм: {end_time - start_time} секунд")
+
+# Вывод первых 5 оптимальных расписаний
+print("Первые 5 оптимальных расписаний:")
 for schedule in optimal_schedules[:5]:
     print(schedule)
