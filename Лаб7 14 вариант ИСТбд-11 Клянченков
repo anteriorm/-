@@ -1,0 +1,127 @@
+import time
+import itertools
+import tkinter as tk
+from tkinter import scrolledtext
+
+
+
+# Зарплаты работников
+salaries = {
+    'men': [1000, 1200, 1100, 1300, 1250, 1150, 1220, 1230],
+    'women': [800, 850, 900, 950, 1000, 1050, 980, 1020, 990, 1010, 1030, 1040]
+}
+
+def schedule_cost(schedule):
+    men_cost, women_cost = schedule
+    men_cost = [m for m in men_cost if m < len(salaries['men'])]
+    women_cost = [w for w in women_cost if w < len(salaries['women'])]
+    # Суммируем зарплаты
+    return sum(salaries['men'][m] for m in men_cost) + sum(salaries['women'][w] for w in women_cost)
+
+# Функция для создания комбинаций без использования itertools.combinations
+def custom_combinations(arr, k, start=0, curr=[]):
+    if len(curr) == k:
+        yield tuple(curr)
+    else:
+        for i in range(start, len(arr)):
+            yield from custom_combinations(arr, k, i + 1, curr + [arr[i]])
+
+# Алгоритмический подход с учетом вилки зарплаты и минимизации затрат
+def algorithmic_schedule_generation(women, men, power_positions, positions, salary_cap):
+    men = min(men, len(salaries['men']))
+    women = min(women, len(salaries['women']))
+
+    schedules = []
+    for men_comb in custom_combinations(range(men), power_positions):
+        for women_comb in custom_combinations(range(women), positions - power_positions):
+            schedule = (men_comb, women_comb)
+            cost = schedule_cost(schedule)
+            if cost <= salary_cap:
+                schedules.append(schedule)
+    # Сортируем расписания по стоимости
+    return sorted(schedules, key=schedule_cost)
+
+# Питоновский подход с учетом вилки зарплаты
+def pythonic_schedule_generation(women, men, power_positions, positions, salary_cap):
+    men_combinations = list(itertools.combinations(range(men), power_positions))
+    women_combinations = list(itertools.combinations(range(women), positions - power_positions))
+    all_combinations = list(itertools.product(men_combinations, women_combinations))
+    valid_schedules = [comb for comb in all_combinations if schedule_cost(comb) <= salary_cap]
+    # Сортируем расписания по стоимости
+    return sorted(valid_schedules, key=schedule_cost)
+
+# Функция, вызываемая при нажатии кнопки для генерации расписания
+def on_generate():
+    try:
+        # Получаем значения из полей ввода
+        women = int(women_entry.get())
+        men = int(men_entry.get())
+        power_positions = int(power_positions_entry.get())
+        positions = int(positions_entry.get())
+        salary_cap = int(salary_cap_entry.get())
+    except ValueError:
+        output_text.delete(1.0, tk.END)
+        output_text.insert(tk.INSERT, "Пожалуйста, заполните все поля ввода целыми числами.\n")
+        return  # Прерываем выполнение функции, если данные некорректны
+
+    # Выполняем алгоритмы генерации расписания
+    start_time = time.time()
+    schedules_alg = algorithmic_schedule_generation(women, men, power_positions, positions, salary_cap)
+    end_time = time.time()
+    alg_time = f"Алгоритмический подход: {end_time - start_time} секунд"
+
+    start_time = time.time()
+    schedules_py = pythonic_schedule_generation(women, men, power_positions, positions, salary_cap)
+    end_time = time.time()
+    py_time = f"Подход с использованием функций Python: {end_time - start_time} секунд"
+
+    # Выводим результаты в окно вывода
+    output_text.delete(1.0, tk.END)
+    output_text.insert(tk.INSERT, alg_time + "\n")
+    output_text.insert(tk.INSERT, py_time + "\n\n")
+    output_text.insert(tk.INSERT, "Первые 5 оптимальных расписаний (алгоритмический подход):\n")
+    for schedule in schedules_alg[:5]:
+        output_text.insert(tk.INSERT, f"{schedule} {schedule_cost(schedule)}\n")
+    output_text.insert(tk.INSERT, "\nПервые 5 оптимальных расписаний (подход с использованием функций Python):\n")
+    for schedule in schedules_py[:5]:
+        output_text.insert(tk.INSERT, f"{schedule} {schedule_cost(schedule)}\n")
+
+# Создание графического интерфейса
+root = tk.Tk()
+root.title("Генератор расписаний")
+
+# Поля ввода
+tk.Label(root, text="Количество женщин:").pack()
+women_entry = tk.Entry(root)
+women_entry.pack()
+
+tk.Label(root, text="Количество мужчин:").pack()
+men_entry = tk.Entry(root)
+men_entry.pack()
+
+tk.Label(root, text="Количество руководящих позиций:").pack()
+power_positions_entry = tk.Entry(root)
+power_positions_entry.pack()
+
+tk.Label(root, text="Количество позиций:").pack()
+positions_entry = tk.Entry(root)
+positions_entry.pack()
+
+tk.Label(root, text="Предел зарплаты:").pack()
+salary_cap_entry = tk.Entry(root)
+salary_cap_entry.pack()
+
+# Кнопка генерации расписания
+generate_button = tk.Button(root, text="Сгенерировать расписания", command=on_generate)
+generate_button.pack()
+
+# Окно вывода со скроллингом
+output_frame = tk.Frame(root)
+output_frame.pack(expand=True, fill='both')
+output_scrollbar = tk.Scrollbar(output_frame)
+output_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+output_text = scrolledtext.ScrolledText(output_frame, wrap=tk.WORD, yscrollcommand=output_scrollbar.set)
+output_text.pack(expand=True, fill='both')
+output_scrollbar.config(command=output_text.yview)
+# Запуск главного цикла Tkinter
+root.mainloop()
