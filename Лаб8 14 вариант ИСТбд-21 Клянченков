@@ -1,68 +1,97 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox
 import matplotlib.pyplot as plt
-
-# Пример данных о банковских вкладах
-deposits = [
-    {'id': 1, 'type': 'сберегательный', 'amount': 5000},
-    {'id': 2, 'type': 'накопительный', 'amount': 15000},
-    {'id': 3, 'type': 'сберегательный', 'amount': 25000},
-    {'id': 4, 'type': 'накопительный', 'amount': 35000},
-    {'id': 5, 'type': 'сберегательный', 'amount': 45000},
-    {'id': 6, 'type': 'накопительный', 'amount': 55000},
-    {'id': 7, 'type': 'сберегательный', 'amount': 65000},
-    {'id': 8, 'type': 'накопительный', 'amount': 75000},
-]
+import csv
 
 
-# Функция сегментации по видам вкладов
-def segment_by_type(deposits):
-    segmentation = {}
-    for deposit in deposits:
-        deposit_type = deposit['type']
-        if deposit_type not in segmentation:
-            segmentation[deposit_type] = []
-        segmentation[deposit_type].append(deposit)
-    return segmentation
+class BankDeposit:
+    def __init__(self, deposit_id, deposit_type, amount):
+        self.deposit_id = deposit_id
+        self.deposit_type = deposit_type
+        self.amount = amount
 
 
-# Визуализация сегментации по видам вкладов
-def visualize_by_type(segmentation):
-    labels = segmentation.keys()
-    sizes = [len(segmentation[deposit_type]) for deposit_type in labels]
+class DepositManager:
+    def __init__(self):
+        self.deposits = []
 
-    plt.figure(figsize=(8, 8))
-    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
-    plt.title('Сегментация вкладов по видам')
-    plt.show()
+    def load_from_file(self, filename):
+        try:
+            with open(filename, 'r') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    if len(row) != 3:
+                        raise ValueError("Неверный формат данных")
+                    deposit_id, deposit_type, amount = row
+                    self.deposits.append(BankDeposit(deposit_id, deposit_type, float(amount)))
+            return True
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Ошибка при чтении файла: {e}")
+            return False
+
+    def segment_by_type(self):
+        segmentation = {}
+        for deposit in self.deposits:
+            if deposit.deposit_type not in segmentation:
+                segmentation[deposit.deposit_type] = []
+            segmentation[deposit.deposit_type].append(deposit)
+        return segmentation
+
+    def segment_by_amount(self):
+        segmentation = {'мелкие': [], 'средние': [], 'крупные': []}
+        for deposit in self.deposits:
+            if deposit.amount < 20000:
+                segmentation['мелкие'].append(deposit)
+            elif 20000 <= deposit.amount < 50000:
+                segmentation['средние'].append(deposit)
+            else:
+                segmentation['крупные'].append(deposit)
+        return segmentation
 
 
-# Функция сегментации по типам вкладов (мелкие, средние, крупные)
-def segment_by_amount(deposits):
-    segmentation = {'мелкие': [], 'средние': [], 'крупные': []}
-    for deposit in deposits:
-        amount = deposit['amount']
-        if amount < 20000:
-            segmentation['мелкие'].append(deposit)
-        elif 20000 <= amount < 50000:
-            segmentation['средние'].append(deposit)
-        else:
-            segmentation['крупные'].append(deposit)
-    return segmentation
+class App:
+    def __init__(self, root):
+        self.manager = DepositManager()
+        self.root = root
+        self.root.title("Управление банковскими вкладами")
+
+        self.load_button = tk.Button(root, text="Загрузить данные", command=self.load_data)
+        self.load_button.pack(pady=10)
+
+        self.segment_type_button = tk.Button(root, text="Сегментация по видам", command=self.visualize_by_type)
+        self.segment_type_button.pack(pady=10)
+
+        self.segment_amount_button = tk.Button(root, text="Сегментация по типам", command=self.visualize_by_amount)
+        self.segment_amount_button.pack(pady=10)
+
+    def load_data(self):
+        filename = filedialog.askopenfilename(title="Выберите файл", filetypes=[("CSV files", "*.csv")])
+        if filename:
+            if self.manager.load_from_file(filename):
+                messagebox.showinfo("Успех", "Данные успешно загружены")
+
+    def visualize_by_type(self):
+        segmentation = self.manager.segment_by_type()
+        labels = segmentation.keys()
+        sizes = [len(segmentation[deposit_type]) for deposit_type in labels]
+
+        plt.figure(figsize=(8, 8))
+        plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+        plt.title('Сегментация вкладов по видам')
+        plt.show()
+
+    def visualize_by_amount(self):
+        segmentation = self.manager.segment_by_amount()
+        labels = segmentation.keys()
+        sizes = [len(segmentation[amount_type]) for amount_type in labels]
+
+        plt.figure(figsize=(8, 8))
+        plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+        plt.title('Сегментация вкладов по типам (мелкие, средние, крупные)')
+        plt.show()
 
 
-# Визуализация сегментации по типам вкладов
-def visualize_by_amount(segmentation):
-    labels = segmentation.keys()
-    sizes = [len(segmentation[amount_type]) for amount_type in labels]
-
-    plt.figure(figsize=(8, 8))
-    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
-    plt.title('Сегментация вкладов по типам (мелкие, средние, крупные)')
-    plt.show()
-
-
-# Пример использования функций
-segmentation_by_type = segment_by_type(deposits)
-visualize_by_type(segmentation_by_type)
-
-segmentation_by_amount = segment_by_amount(deposits)
-visualize_by_amount(segmentation_by_amount)
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
