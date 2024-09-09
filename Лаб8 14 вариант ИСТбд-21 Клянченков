@@ -17,9 +17,11 @@ class DepositManager:
 
     def load_from_file(self, filename):
         try:
-            with open(filename, 'r') as file:
-                reader = csv.reader(file)
-                for row in reader:
+            with open(filename, 'r', encoding='utf-8') as file:
+                data = file.read()
+                lines = data.split('\n')
+                for line in lines:
+                    row = line.strip().split(',')
                     if len(row) != 3:
                         raise ValueError("Неверный формат данных")
                     deposit_id, deposit_type, amount = row
@@ -65,7 +67,7 @@ class App:
         self.segment_amount_button.pack(pady=10)
 
     def load_data(self):
-        filename = filedialog.askopenfilename(title="Выберите файл", filetypes=[("CSV files", "*.csv")])
+        filename = filedialog.askopenfilename(title="Выберите файл", filetypes=[("Text files", "*.txt")])
         if filename:
             if self.manager.load_from_file(filename):
                 messagebox.showinfo("Успех", "Данные успешно загружены")
