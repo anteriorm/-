@@ -1,0 +1,253 @@
+import pygame
+import heapq
+
+# Инициализация Pygame
+pygame.init()
+
+# Размеры окна
+WIDTH, HEIGHT = 800, 800
+ROWS = 40
+GRID_SIZE = WIDTH // ROWS
+
+# Цвета
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GREY = (200, 200, 200)
+
+# Создаем окно
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Оптимизация маршрута")
+
+# Класс узла
+class Node:
+    def __init__(self, row, col):
+        self.row = row
+        self.col = col
+        self.x = row * GRID_SIZE
+        self.y = col * GRID_SIZE
+        self.color = WHITE
+        self.neighbors = []
+        self.g_score = float('inf')
+        self.f_score = float('inf')
+        self.came_from = None
+
+    def get_pos(self):
+        return self.row, self.col
+
+    def is_closed(self):
+        return self.color == RED
+
+    def is_open(self):
+        return self.color == GREEN
+
+    def is_barrier(self):
+        return self.color == BLACK
+
+    def is_start(self):
+        return self.color == BLUE
+
+    def is_end(self):
+        return self.color == YELLOW
+
+    def reset(self):
+        self.color = WHITE
+
+    def make_start(self):
+        self.color = BLUE
+
+    def make_closed(self):
+        self.color = RED
+
+    def make_open(self):
+        self.color = GREEN
+
+    def make_barrier(self):
+        self.color = BLACK
+
+    def make_end(self):
+        self.color = YELLOW
+
+    def make_path(self):
+        self.color = YELLOW
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, (self.x, self.y, GRID_SIZE, GRID_SIZE))
+
+    # Восстановление всех равнозначных путей
+    def reconstruct_all_paths(end, draw):
+        queue = [end]
+        visited = {end}
+
+        while queue:
+            current = queue.pop(0)
+            if current.came_from:
+                current.make_path()
+            draw()
+
+            # Проверяем всех соседей, которые являются частью равнозначного пути
+            for neighbor in current.neighbors:
+                if neighbor.g_score == current.g_score - 1 and neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+
+    def update_neighbors(self, grid):
+        self.neighbors = []
+        if self.row < ROWS - 1 and not grid[self.row + 1][self.col].is_barrier():  # Вниз
+            self.neighbors.append(grid[self.row + 1][self.col])
+        if self.row > 0 and not grid[self.row - 1][self.col].is_barrier():  # Вверх
+            self.neighbors.append(grid[self.row - 1][self.col])
+        if self.col < ROWS - 1 and not grid[self.row][self.col + 1].is_barrier():  # Вправо
+            self.neighbors.append(grid[self.row][self.col + 1])
+        if self.col > 0 and not grid[self.row][self.col - 1].is_barrier():  # Влево
+            self.neighbors.append(grid[self.row][self.col - 1])
+
+# Функция эвристики (Манхэттенское расстояние)
+def h(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    return abs(x1 - x2) + abs(y1 - y2)
+
+# Алгоритм A*
+def a_star_algorithm(draw, grid, start, end):
+    count = 0
+    open_set = []
+    heapq.heappush(open_set, (0, count, start))
+    start.g_score = 0
+    start.f_score = h(start.get_pos(), end.get_pos())
+    open_set_hash = {start}
+
+    while open_set:
+        current = heapq.heappop(open_set)[2]
+        open_set_hash.remove(current)
+
+        if current == end:
+            reconstruct_path(current, draw)
+            return True
+
+        for neighbor in current.neighbors:
+            temp_g_score = current.g_score + 1
+
+            if temp_g_score < neighbor.g_score:
+                neighbor.came_from = current
+                neighbor.g_score = temp_g_score
+                neighbor.f_score = temp_g_score + h(neighbor.get_pos(), end.get_pos())
+
+                if neighbor not in open_set_hash:
+                    count += 1
+                    heapq.heappush(open_set, (neighbor.f_score, count, neighbor))
+                    open_set_hash.add(neighbor)
+                    neighbor.make_open()
+
+        draw()
+
+        if current != start:
+            current.make_closed()
+
+    return False
+
+# Восстановление пути
+def reconstruct_path(current, draw):
+    while current.came_from:
+        current = current.came_from
+        current.make_path()
+        draw()
+
+# Создание сетки
+def make_grid(rows):
+    grid = []
+    for i in range(rows):
+        grid.append([])
+        for j in range(rows):
+            node = Node(i, j)
+            grid[i].append(node)
+    return grid
+
+# Отрисовка сетки
+def draw_grid(screen, rows):
+    for i in range(rows):
+        pygame.draw.line(screen, GREY, (0, i * GRID_SIZE), (WIDTH, i * GRID_SIZE))
+        pygame.draw.line(screen, GREY, (i * GRID_SIZE, 0), (i * GRID_SIZE, HEIGHT))
+
+# Отрисовка всего
+def draw(screen, grid):
+    screen.fill(WHITE)
+
+    for row in grid:
+        for node in row:
+            node.draw(screen)
+
+    draw_grid(screen, ROWS)
+    pygame.display.update()
+
+# Получение позиции узла по клику
+def get_clicked_pos(pos):
+    y, x = pos
+    row = y // GRID_SIZE
+    col = x // GRID_SIZE
+    return row, col
+
+# Основная функция
+def main(screen):
+    grid = make_grid(ROWS)
+
+    start = None
+    end = None
+    run = True
+    while run:
+        draw(screen, grid)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if pygame.mouse.get_pressed()[0]:  # ЛКМ
+                pos = pygame.mouse.get_pos()
+                row, col = get_clicked_pos(pos)
+                node = grid[row][col]
+                if not start and node != end:
+                    start = node
+                    start.make_start()
+                elif not end and node != start:
+                    end = node
+                    end.make_end()
+                elif node != start and node != end:
+                    node.make_barrier()
+
+            elif pygame.mouse.get_pressed()[2]:  # ПКМ
+                pos = pygame.mouse.get_pos()
+                row, col = get_clicked_pos(pos)
+                node = grid[row][col]
+                node.reset()
+                if node == start:
+                    start = None
+                elif node == end:
+                    end = None
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and start and end:
+                    for row in grid:
+                        for node in row:
+                            node.update_neighbors(grid)
+                    # Проверка, найден ли путь
+                    found_path = a_star_algorithm(lambda: draw(screen, grid), grid, start, end)
+
+                    if not found_path:
+                        # Вывод сообщения "Нет пути!"
+                        font = pygame.font.SysFont(None, 50)
+                        text = font.render("Нет пути!", True, BLUE)
+                        screen.blit(text, (WIDTH // 2 - 100, HEIGHT // 2 - 25))
+                        pygame.display.update()
+                        pygame.time.delay(2000)  # Задержка 2 секунды
+
+                if event.key == pygame.K_c:
+                    start = None
+                    end = None
+                    grid = make_grid(ROWS)
+
+    pygame.quit()
+
+
+main(screen)
